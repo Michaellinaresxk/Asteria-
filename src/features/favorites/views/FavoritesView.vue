@@ -4,10 +4,12 @@ import { RouterLink } from 'vue-router';
 
 import { CELESTIAL_BODIES } from '@/features/planets/data/bodies';
 import { ASTRONOMY_EVENTS } from '@/features/astronomy/data/dailyEvents';
+import { useReminders } from '@/features/reminders/composables/useReminders';
 import { useFavorites } from '../composables/useFavorites';
 import { getNotificationStatus, requestNotificationPermission, sendLocalNotification } from '../utils/notifications';
 
 const { state, toggleBody, toggleEvent } = useFavorites();
+const { reminders, removeReminder } = useReminders();
 const notificationStatus = ref(getNotificationStatus());
 
 const favoriteBodies = computed(() => CELESTIAL_BODIES.filter((b) => state.value.bodies.includes(b.id)));
@@ -41,6 +43,21 @@ function testReminder() {
       <div class="actions">
         <button class="primary-btn" type="button" @click="enableNotifications">Activar notificaciones</button>
         <button class="secondary-btn" type="button" @click="testReminder">Probar recordatorio</button>
+      </div>
+
+      <div class="reminders">
+        <h3>Recordatorios programados</h3>
+        <div v-if="reminders.length" class="list">
+          <div v-for="reminder in reminders" :key="reminder.id" class="list-item">
+            <div>
+              <span class="event-date">{{ reminder.eventDate }}</span>
+              <span class="item-name">{{ reminder.title }}</span>
+              <span class="reminder-state">{{ reminder.notified ? 'Notificado' : 'Pendiente' }}</span>
+            </div>
+            <button class="remove-btn" type="button" @click="removeReminder(reminder.id)">Quitar</button>
+          </div>
+        </div>
+        <p v-else class="empty">No tienes recordatorios programados. Agrégalos desde <RouterLink to="/eventos">Eventos</RouterLink>.</p>
       </div>
     </section>
 
@@ -91,6 +108,9 @@ h2 { margin: 6px 0 14px; font-size: 1.3rem; }
 .item-link, .item-name { color: #fff; font-weight: 600; text-decoration: none; }
 .event-date { color: #7dd3fc; font-size: 0.85rem; margin-right: 8px; }
 .empty a { color: #7dd3fc; }
+.reminders { margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+.reminders h3 { margin: 0 0 12px; font-size: 1rem; }
+.reminder-state { margin-left: 8px; font-size: 0.75rem; color: rgba(245,247,255,0.62); }
 @keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .hero, .card { animation: none; } }
 </style>
