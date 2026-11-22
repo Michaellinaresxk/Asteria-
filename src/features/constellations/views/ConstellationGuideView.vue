@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 
 import { useLocation } from '@/features/astronomy/composables/useLocation';
+import ConstellationMap from '../components/ConstellationMap.vue';
 import { CONSTELLATIONS } from '../data/constellations';
 import { getSeason, getVisibleConstellations, type Season } from '../utils/visibility';
 
@@ -41,6 +42,7 @@ const displayed = computed(() => showOnlyVisible.value ? visible.value : CONSTEL
 
     <div class="grid">
       <article v-for="c in displayed" :key="c.id" class="card constellation-card">
+        <ConstellationMap :constellation="c" :active="visibleIds.has(c.id)" class="map" />
         <div class="card-top">
           <span class="latin">{{ c.latin }}</span>
           <span v-if="visibleIds.has(c.id)" class="badge">Visible ahora</span>
@@ -68,6 +70,7 @@ h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
 .controls h2 { margin: 6px 0 0; font-size: 1.2rem; }
 .toggle-btn { min-height: 44px; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.12); color: #7dd3fc; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+.map { margin-bottom: 14px; }
 @media (min-width: 700px) { .grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
 .card-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 8px; }
