@@ -5,10 +5,12 @@ import { useRoute, RouterLink } from 'vue-router';
 import SkeletonLoader from '@/shared/components/SkeletonLoader.vue';
 import { searchPlanetImages } from '@/shared/services/nasa';
 import { EARTH_GRAVITY } from '@/features/planets/data/gravity';
+import { useFavorites } from '@/features/favorites/composables/useFavorites';
 import { getBodyById } from '../data/bodies';
 
 const route = useRoute();
 const body = computed(() => getBodyById(String(route.params.id)));
+const { toggleBody, isBodyFavorite } = useFavorites();
 
 const weight = ref<number | null>(null);
 const imageUrl = ref('');
@@ -54,6 +56,9 @@ watch(body, (next) => {
         <p class="eyebrow">{{ body.type === 'moon' ? 'Luna' : body.type === 'star' ? 'Estrella' : 'Planeta' }}</p>
         <h1>{{ body.name }}</h1>
         <p class="subtitle">{{ body.description }}</p>
+        <button class="favorite-btn" type="button" @click="toggleBody(body.id)">
+          {{ isBodyFavorite(body.id) ? '★ Guardado en favoritos' : '☆ Guardar en favoritos' }}
+        </button>
       </header>
 
       <div class="detail-grid">
@@ -97,6 +102,7 @@ watch(body, (next) => {
 .eyebrow { margin: 0; color: #7dd3fc; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; }
 h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
 .subtitle { margin: 0; color: rgba(245,247,255,0.82); line-height: 1.6; }
+.favorite-btn { margin-top: 14px; min-height: 44px; border-radius: 12px; border: 1px solid rgba(251,191,36,0.35); background: rgba(251,191,36,0.12); color: #fde68a; font-weight: 600; padding: 10px 14px; cursor: pointer; }
 .detail-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
 @media (min-width: 900px) { .detail-grid { grid-template-columns: 1.2fr 1fr; align-items: start; } }
 .card { background: rgba(10,18,40,0.72); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 20px; backdrop-filter: blur(10px); animation: fade-up 0.5s ease both; }

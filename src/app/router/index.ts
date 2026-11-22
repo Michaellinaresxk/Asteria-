@@ -31,6 +31,11 @@ const router = createRouter({
       component: () => import('@/features/learning/views/LearningHubView.vue'),
     },
     {
+      path: '/favoritos',
+      name: 'favorites',
+      component: () => import('@/features/favorites/views/FavoritesView.vue'),
+    },
+    {
       path: '/calculadora',
       name: 'calculator',
       component: () => import('@/features/weight-calculator/views/HomeView.vue'),
