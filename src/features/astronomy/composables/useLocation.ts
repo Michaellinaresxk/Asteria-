@@ -40,6 +40,11 @@ export function useLocation() {
       locationError.value = 'La geolocalización no está disponible en este navegador.';
       return;
     }
+    if (!window.isSecureContext) {
+      locationError.value = 'La geolocalización requiere HTTPS o localhost. Ingresa tu ubicación manualmente.';
+      return;
+    }
+
     locating.value = true;
     locationError.value = '';
     navigator.geolocation.getCurrentPosition(
@@ -51,11 +56,19 @@ export function useLocation() {
         });
         locating.value = false;
       },
-      () => {
-        locationError.value = 'No se pudo obtener tu ubicación. Puedes ingresarla manualmente.';
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          locationError.value = 'Permiso de ubicación denegado. Habilítalo en el navegador o ingresa tu ubicación manualmente.';
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          locationError.value = 'Tu ubicación no está disponible en este momento. Intenta de nuevo o ingrésala manualmente.';
+        } else if (err.code === err.TIMEOUT) {
+          locationError.value = 'Se agotó el tiempo para obtener tu ubicación. Intenta de nuevo.';
+        } else {
+          locationError.value = 'No se pudo obtener tu ubicación. Puedes ingresarla manualmente.';
+        }
         locating.value = false;
       },
-      { enableHighAccuracy: false, timeout: 8000 },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
     );
   }
 
