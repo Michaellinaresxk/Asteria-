@@ -6,6 +6,7 @@ import { RouterLink, RouterView } from 'vue-router';
   <div id="app-shell">
     <nav class="nav" aria-label="Navegación principal">
       <RouterLink to="/" class="nav-link">Hoy</RouterLink>
+      <RouterLink to="/eventos" class="nav-link">Eventos</RouterLink>
       <RouterLink to="/calculadora" class="nav-link">Calculadora</RouterLink>
       <RouterLink to="/about" class="nav-link">About</RouterLink>
     </nav>
@@ -39,12 +40,18 @@ import { RouterLink, RouterView } from 'vue-router';
   top: 0;
   z-index: 20;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
   padding: 12px 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   background: rgba(8, 14, 32, 0.55);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (min-width: 640px) {
+  .nav { justify-content: center; }
 }
 
 .nav-link {
@@ -56,6 +63,7 @@ import { RouterLink, RouterView } from 'vue-router';
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
   transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 
   &:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }

@@ -11,6 +11,11 @@ const router = createRouter({
       component: AstronomyDashboardView,
     },
     {
+      path: '/eventos',
+      name: 'events',
+      component: () => import('@/features/astronomy/views/EventsCalendarView.vue'),
+    },
+    {
       path: '/calculadora',
       name: 'calculator',
       component: () => import('@/features/weight-calculator/views/HomeView.vue'),
