@@ -2,6 +2,7 @@
 import { RouterView } from 'vue-router';
 
 import AppNav from './components/AppNav.vue';
+import AppFooter from './components/AppFooter.vue';
 </script>
 
 <template>
@@ -14,12 +15,15 @@ import AppNav from './components/AppNav.vue';
         </Transition>
       </RouterView>
     </main>
+    <AppFooter />
   </div>
 </template>
 
 <style lang="scss">
 #app-shell {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background:
     linear-gradient(180deg, rgba(5, 10, 25, 0.35), rgba(5, 10, 25, 0.65)),
     url('https://backiee.com/static/wpdb/wallpapers/7680x4320/217772.jpg');
@@ -33,6 +37,7 @@ import AppNav from './components/AppNav.vue';
 }
 
 .main-content {
+  flex: 1;
   padding: 24px 16px 40px;
 }
 
