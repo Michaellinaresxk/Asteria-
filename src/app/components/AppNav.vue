@@ -19,7 +19,7 @@ const moreLinks = [
   { to: '/constelaciones', label: 'Guía' },
   { to: '/aprende', label: 'Aprende' },
   { to: '/favoritos', label: 'Favoritos' },
-  { to: '/calculadora', label: 'Calculadora' },
+  { to: '/about', label: 'About' },
 ];
 
 watch(() => route.fullPath, () => {

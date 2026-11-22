@@ -51,14 +51,9 @@ const router = createRouter({
       component: () => import('@/features/constellations/views/ConstellationGuideView.vue'),
     },
     {
-      path: '/calculadora',
-      name: 'calculator',
-      component: () => import('@/features/weight-calculator/views/HomeView.vue'),
-    },
-    {
       path: '/about',
       name: 'about',
-      component: () => import('@/features/weight-calculator/views/AboutView.vue'),
+      component: () => import('@/app/views/AboutView.vue'),
     },
   ],
 });
