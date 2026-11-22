@@ -16,6 +16,16 @@ const router = createRouter({
       component: () => import('@/features/astronomy/views/EventsCalendarView.vue'),
     },
     {
+      path: '/planetas',
+      name: 'planets',
+      component: () => import('@/features/planets/views/PlanetExplorerView.vue'),
+    },
+    {
+      path: '/planetas/:id',
+      name: 'planet-detail',
+      component: () => import('@/features/planets/views/PlanetDetailView.vue'),
+    },
+    {
       path: '/calculadora',
       name: 'calculator',
       component: () => import('@/features/weight-calculator/views/HomeView.vue'),
