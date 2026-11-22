@@ -18,6 +18,7 @@ const typeLabels = { planet: 'Planeta', moon: 'Luna', star: 'Estrella' } as cons
       <RouterLink
         v-for="body in CELESTIAL_BODIES"
         :key="body.id"
+        v-reveal
         :to="`/planetas/${body.id}`"
         class="body-card card"
       >

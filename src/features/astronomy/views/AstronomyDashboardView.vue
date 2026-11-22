@@ -26,18 +26,19 @@ const today = new Date().toLocaleDateString('es-ES', {
     </header>
 
     <div class="dashboard-grid">
-      <MoonPhaseCard />
+      <MoonPhaseCard v-reveal />
       <LocationCard
+        v-reveal
         :location="location"
         :locating="locating"
         :error="locationError"
         @update:location="saveLocation"
         @request-geolocation="requestGeolocation"
       />
-      <SunTimesCard :location="location" />
-      <ApodCard class="grid-apod" />
-      <DailyEventsCard />
-      <ShareCard />
+      <SunTimesCard v-reveal :location="location" />
+      <ApodCard v-reveal class="grid-apod" />
+      <DailyEventsCard v-reveal />
+      <ShareCard v-reveal />
     </div>
   </div>
 </template>

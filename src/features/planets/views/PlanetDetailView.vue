@@ -68,7 +68,7 @@ watch(body, (next) => {
       </header>
 
       <div class="detail-grid">
-        <section class="card info-card">
+        <section v-reveal class="card info-card">
           <Planet3D :body-id="body.id" class="planet-3d-view" />
           <div v-if="imageLoading" class="loading-block"><SkeletonLoader height="240px" radius="14px" /></div>
           <img v-else-if="imageUrl" :src="imageUrl" :alt="body.name" class="body-image" loading="lazy">
@@ -82,7 +82,7 @@ watch(body, (next) => {
           <p class="fun-fact"><strong>Dato curioso:</strong> {{ body.funFact }}</p>
         </section>
 
-        <section class="card calc-card">
+        <section v-reveal class="card calc-card">
           <p class="eyebrow">Calculadora</p>
           <h2>Tu peso en {{ body.name }}</h2>
           <label class="field">
