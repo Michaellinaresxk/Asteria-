@@ -16,6 +16,11 @@ const router = createRouter({
       component: () => import('@/features/astronomy/views/EventsCalendarView.vue'),
     },
     {
+      path: '/cielo',
+      name: 'sky',
+      component: () => import('@/features/sky/views/VisiblePlanetsView.vue'),
+    },
+    {
       path: '/planetas',
       name: 'planets',
       component: () => import('@/features/planets/views/PlanetExplorerView.vue'),

@@ -6,6 +6,7 @@ import { RouterLink, RouterView } from 'vue-router';
   <div id="app-shell">
     <nav class="nav" aria-label="Navegación principal">
       <RouterLink to="/" class="nav-link">Hoy</RouterLink>
+      <RouterLink to="/cielo" class="nav-link">Cielo</RouterLink>
       <RouterLink to="/eventos" class="nav-link">Eventos</RouterLink>
       <RouterLink to="/planetas" class="nav-link">Planetas</RouterLink>
       <RouterLink to="/aprende" class="nav-link">Aprende</RouterLink>
