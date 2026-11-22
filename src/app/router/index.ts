@@ -16,6 +16,11 @@ const router = createRouter({
       component: () => import('@/features/astronomy/views/EventsCalendarView.vue'),
     },
     {
+      path: '/cielo',
+      name: 'sky',
+      component: () => import('@/features/sky/views/VisiblePlanetsView.vue'),
+    },
+    {
       path: '/planetas',
       name: 'planets',
       component: () => import('@/features/planets/views/PlanetExplorerView.vue'),
@@ -34,6 +39,16 @@ const router = createRouter({
       path: '/favoritos',
       name: 'favorites',
       component: () => import('@/features/favorites/views/FavoritesView.vue'),
+    },
+    {
+      path: '/iss',
+      name: 'iss',
+      component: () => import('@/features/iss/views/IssTrackerView.vue'),
+    },
+    {
+      path: '/constelaciones',
+      name: 'constellations',
+      component: () => import('@/features/constellations/views/ConstellationGuideView.vue'),
     },
     {
       path: '/calculadora',
