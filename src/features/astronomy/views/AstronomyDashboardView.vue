@@ -3,6 +3,7 @@ import ApodCard from '../components/ApodCard.vue';
 import DailyEventsCard from '../components/DailyEventsCard.vue';
 import LocationCard from '../components/LocationCard.vue';
 import MoonPhaseCard from '../components/MoonPhaseCard.vue';
+import ShareCard from '../components/ShareCard.vue';
 import SunTimesCard from '../components/SunTimesCard.vue';
 import { useLocation } from '../composables/useLocation';
 
@@ -36,6 +37,7 @@ const today = new Date().toLocaleDateString('es-ES', {
       <SunTimesCard :location="location" />
       <ApodCard class="grid-apod" />
       <DailyEventsCard />
+      <ShareCard />
     </div>
   </div>
 </template>

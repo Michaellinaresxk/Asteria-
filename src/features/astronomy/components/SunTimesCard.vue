@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 
+import SkeletonLoader from '@/shared/components/SkeletonLoader.vue';
 import { getSunTimes } from '@/shared/services/sunTimes';
 import type { SunTimes, UserLocation } from '@/shared/types/location';
 
@@ -44,7 +45,11 @@ watch(() => [props.location.latitude, props.location.longitude], () => { void lo
     <h2>Amanecer y atardecer</h2>
     <p class="location-label">{{ location.label }}</p>
 
-    <p v-if="loading" class="status">Cargando horarios solares...</p>
+    <div v-if="loading" class="loading-block" aria-label="Cargando">
+      <SkeletonLoader height="52px" />
+      <SkeletonLoader height="52px" />
+      <SkeletonLoader height="52px" />
+    </div>
     <p v-else-if="error" class="status error">{{ error }}</p>
 
     <div v-else-if="sunTimes" class="times-grid">
@@ -87,6 +92,7 @@ watch(() => [props.location.latitude, props.location.longitude], () => { void lo
 h2 { margin: 6px 0 4px; font-size: clamp(1.2rem, 4vw, 1.6rem); }
 .location-label, .status { color: rgba(245,247,255,0.75); font-size: 0.9rem; margin: 0 0 14px; }
 .error { color: #fca5a5; }
+.loading-block { display: flex; flex-direction: column; gap: 10px; }
 .times-grid { display: grid; gap: 12px; }
 .time-item { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.08); }
 .icon { font-size: 1.5rem; width: 32px; text-align: center; }

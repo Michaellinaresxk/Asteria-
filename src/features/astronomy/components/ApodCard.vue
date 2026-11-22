@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 
+import SkeletonLoader from '@/shared/components/SkeletonLoader.vue';
 import { getAstronomyPictureOfDay } from '@/shared/services/apod';
 import type { ApodResponse } from '@/shared/types/astronomy';
 
@@ -24,7 +25,13 @@ onMounted(async () => {
     <p class="eyebrow">NASA APOD</p>
     <h2>Foto astronómica del día</h2>
 
-    <p v-if="loading" class="status">Cargando imagen del cosmos...</p>
+    <div v-if="loading" class="loading-block" aria-label="Cargando">
+      <SkeletonLoader height="220px" radius="14px" />
+      <SkeletonLoader width="70%" height="20px" />
+      <SkeletonLoader height="14px" />
+      <SkeletonLoader height="14px" />
+      <SkeletonLoader width="90%" height="14px" />
+    </div>
     <p v-else-if="error" class="status">{{ error }}</p>
 
     <template v-else-if="apod">
@@ -105,6 +112,12 @@ h2 {
   display: inline-block;
   margin-bottom: 12px;
   color: #7dd3fc;
+}
+
+.loading-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 @keyframes fade-up {
