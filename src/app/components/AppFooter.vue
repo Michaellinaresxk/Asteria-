@@ -9,6 +9,8 @@
 
 <style scoped lang="scss">
 .app-footer {
+  position: relative;
+  z-index: 1;
   padding: 24px 16px 32px;
   text-align: center;
   color: rgba(248, 250, 252, 0.72);

@@ -3,10 +3,12 @@ import { RouterView } from 'vue-router';
 
 import AppNav from './components/AppNav.vue';
 import AppFooter from './components/AppFooter.vue';
+import StarfieldBackground from '@/shared/components/StarfieldBackground.vue';
 </script>
 
 <template>
   <div id="app-shell">
+    <StarfieldBackground />
     <AppNav />
     <main class="main-content">
       <RouterView v-slot="{ Component }">
@@ -24,6 +26,8 @@ import AppFooter from './components/AppFooter.vue';
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  isolation: isolate;
   background:
     linear-gradient(180deg, rgba(5, 10, 25, 0.35), rgba(5, 10, 25, 0.65)),
     url('https://backiee.com/static/wpdb/wallpapers/7680x4320/217772.jpg');
@@ -39,6 +43,8 @@ import AppFooter from './components/AppFooter.vue';
 .main-content {
   flex: 1;
   padding: 24px 16px 40px;
+  position: relative;
+  z-index: 1;
 }
 
 .page-enter-active,

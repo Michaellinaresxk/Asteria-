@@ -41,7 +41,7 @@ const displayed = computed(() => showOnlyVisible.value ? visible.value : CONSTEL
     </div>
 
     <div class="grid">
-      <article v-for="c in displayed" :key="c.id" class="card constellation-card">
+      <article v-for="c in displayed" :key="c.id" v-reveal class="card constellation-card">
         <ConstellationMap :constellation="c" :active="visibleIds.has(c.id)" class="map" />
         <div class="card-top">
           <span class="latin">{{ c.latin }}</span>
