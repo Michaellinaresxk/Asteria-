@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import ApodCard from '../components/ApodCard.vue';
 import DailyEventsCard from '../components/DailyEventsCard.vue';
+import LocationCard from '../components/LocationCard.vue';
 import MoonPhaseCard from '../components/MoonPhaseCard.vue';
+import SunTimesCard from '../components/SunTimesCard.vue';
+import { useLocation } from '../composables/useLocation';
+
+const { location, locating, locationError, saveLocation, requestGeolocation } = useLocation();
 
 const today = new Date().toLocaleDateString('es-ES', {
   weekday: 'long',
@@ -20,9 +25,17 @@ const today = new Date().toLocaleDateString('es-ES', {
     </header>
 
     <div class="dashboard-grid">
-      <MoonPhaseCard class="grid-moon" />
+      <MoonPhaseCard />
+      <LocationCard
+        :location="location"
+        :locating="locating"
+        :error="locationError"
+        @update:location="saveLocation"
+        @request-geolocation="requestGeolocation"
+      />
+      <SunTimesCard :location="location" />
       <ApodCard class="grid-apod" />
-      <DailyEventsCard class="grid-events" />
+      <DailyEventsCard />
     </div>
   </div>
 </template>
