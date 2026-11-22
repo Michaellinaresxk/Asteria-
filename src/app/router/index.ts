@@ -36,6 +36,11 @@ const router = createRouter({
       component: () => import('@/features/favorites/views/FavoritesView.vue'),
     },
     {
+      path: '/iss',
+      name: 'iss',
+      component: () => import('@/features/iss/views/IssTrackerView.vue'),
+    },
+    {
       path: '/calculadora',
       name: 'calculator',
       component: () => import('@/features/weight-calculator/views/HomeView.vue'),
