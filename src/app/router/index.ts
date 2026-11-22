@@ -41,6 +41,11 @@ const router = createRouter({
       component: () => import('@/features/iss/views/IssTrackerView.vue'),
     },
     {
+      path: '/constelaciones',
+      name: 'constellations',
+      component: () => import('@/features/constellations/views/ConstellationGuideView.vue'),
+    },
+    {
       path: '/calculadora',
       name: 'calculator',
       component: () => import('@/features/weight-calculator/views/HomeView.vue'),
