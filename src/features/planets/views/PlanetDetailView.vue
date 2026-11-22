@@ -2,6 +2,7 @@
 import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 
+import ImageLightbox from '@/shared/components/ImageLightbox.vue';
 import SkeletonLoader from '@/shared/components/SkeletonLoader.vue';
 import { searchPlanetImages } from '@/shared/services/nasa';
 import { EARTH_GRAVITY } from '@/features/planets/data/gravity';
@@ -19,32 +20,35 @@ const body = computed(() => getBodyById(String(route.params.id)));
 const { toggleBody, isBodyFavorite } = useFavorites();
 
 const weight = ref<number | null>(null);
-const imageUrl = ref('');
+const images = ref<string[]>([]);
 const imageLoading = ref(false);
 const imageError = ref('');
+const selectedImage = ref<string | null>(null);
 
 const calculatedWeight = computed(() => {
   if (!body.value || weight.value === null) return null;
   return Math.round((weight.value * body.value.gravity) / EARTH_GRAVITY);
 });
 
-async function loadImage(name: string) {
+async function loadImages(name: string) {
   imageLoading.value = true;
   imageError.value = '';
-  imageUrl.value = '';
+  images.value = [];
   try {
     const items = await searchPlanetImages(name);
-    const pick = items[Math.floor(Math.random() * Math.min(items.length, 50))];
-    imageUrl.value = pick?.links?.[0]?.href ?? '';
+    images.value = items
+      .map((item) => item.links?.[0]?.href)
+      .filter((href): href is string => Boolean(href))
+      .slice(0, 8);
   } catch {
-    imageError.value = 'No se pudo cargar la imagen.';
+    imageError.value = 'No se pudieron cargar las imágenes.';
   } finally {
     imageLoading.value = false;
   }
 }
 
 watch(body, (next) => {
-  if (next) void loadImage(next.name);
+  if (next) void loadImages(next.name);
 }, { immediate: true });
 </script>
 
@@ -70,9 +74,26 @@ watch(body, (next) => {
       <div class="detail-grid">
         <section v-reveal class="card info-card">
           <Planet3D :body-id="body.id" class="planet-3d-view" />
-          <div v-if="imageLoading" class="loading-block"><SkeletonLoader height="240px" radius="14px" /></div>
-          <img v-else-if="imageUrl" :src="imageUrl" :alt="body.name" class="body-image" loading="lazy">
+
+          <div class="gallery-header">
+            <p class="eyebrow">Galería NASA</p>
+            <h3>Imágenes de {{ body.name }}</h3>
+          </div>
+          <div v-if="imageLoading" class="gallery-grid">
+            <SkeletonLoader v-for="n in 4" :key="n" height="110px" radius="12px" />
+          </div>
           <p v-else-if="imageError" class="status">{{ imageError }}</p>
+          <div v-else-if="images.length" class="gallery-grid">
+            <button
+              v-for="(img, idx) in images"
+              :key="img + idx"
+              type="button"
+              class="gallery-item"
+              @click="selectedImage = img"
+            >
+              <img :src="img" :alt="`${body.name} ${idx + 1}`" loading="lazy">
+            </button>
+          </div>
 
           <dl class="facts">
             <div><dt>Gravedad</dt><dd>{{ body.gravity }} m/s²</dd></div>
@@ -99,6 +120,13 @@ watch(body, (next) => {
         </section>
       </div>
     </template>
+
+    <ImageLightbox
+      v-if="selectedImage && body"
+      :src="selectedImage"
+      :alt="body.name"
+      @close="selectedImage = null"
+    />
   </div>
 </template>
 
@@ -114,7 +142,14 @@ h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
 @media (min-width: 900px) { .detail-grid { grid-template-columns: 1.2fr 1fr; align-items: start; } }
 .card { background: rgba(10,18,40,0.72); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 20px; backdrop-filter: blur(10px); animation: fade-up 0.5s ease both; }
 .planet-3d-view { margin-bottom: 16px; }
-.body-image { width: 100%; max-height: 300px; object-fit: cover; border-radius: 14px; margin-bottom: 16px; }
+.gallery-header { margin-bottom: 12px; }
+.gallery-header .eyebrow { font-size: 0.72rem; }
+.gallery-header h3 { margin: 4px 0 0; font-size: 1.05rem; }
+.gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+@media (min-width: 520px) { .gallery-grid { grid-template-columns: repeat(4, 1fr); } }
+.gallery-item { padding: 0; border: 0; background: none; border-radius: 12px; overflow: hidden; cursor: pointer; min-height: 44px; }
+.gallery-item img { width: 100%; height: 110px; object-fit: cover; display: block; transition: transform .25s ease, filter .25s ease; }
+.gallery-item:hover img { transform: scale(1.04); filter: brightness(1.05); }
 .facts { display: grid; gap: 12px; margin: 0; }
 .facts div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
 dt { color: rgba(245,247,255,0.7); }
