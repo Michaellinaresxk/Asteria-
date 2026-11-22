@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 
 import SkeletonLoader from '@/shared/components/SkeletonLoader.vue';
@@ -7,6 +7,12 @@ import { searchPlanetImages } from '@/shared/services/nasa';
 import { EARTH_GRAVITY } from '@/features/planets/data/gravity';
 import { useFavorites } from '@/features/favorites/composables/useFavorites';
 import { getBodyById } from '../data/bodies';
+
+const Planet3D = defineAsyncComponent({
+  loader: () => import('../components/Planet3D.vue'),
+  loadingComponent: SkeletonLoader,
+  delay: 200,
+});
 
 const route = useRoute();
 const body = computed(() => getBodyById(String(route.params.id)));
@@ -63,6 +69,7 @@ watch(body, (next) => {
 
       <div class="detail-grid">
         <section class="card info-card">
+          <Planet3D :body-id="body.id" class="planet-3d-view" />
           <div v-if="imageLoading" class="loading-block"><SkeletonLoader height="240px" radius="14px" /></div>
           <img v-else-if="imageUrl" :src="imageUrl" :alt="body.name" class="body-image" loading="lazy">
           <p v-else-if="imageError" class="status">{{ imageError }}</p>
@@ -106,6 +113,7 @@ h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
 .detail-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
 @media (min-width: 900px) { .detail-grid { grid-template-columns: 1.2fr 1fr; align-items: start; } }
 .card { background: rgba(10,18,40,0.72); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 20px; backdrop-filter: blur(10px); animation: fade-up 0.5s ease both; }
+.planet-3d-view { margin-bottom: 16px; }
 .body-image { width: 100%; max-height: 300px; object-fit: cover; border-radius: 14px; margin-bottom: 16px; }
 .facts { display: grid; gap: 12px; margin: 0; }
 .facts div { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); }
