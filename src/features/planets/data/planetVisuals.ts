@@ -7,7 +7,7 @@ export interface PlanetVisual {
   ringTexture?: string;
 }
 
-const TEX = 'https://raw.githubusercontent.com/jeromeetienne/threex.planets/master/images';
+const TEX = 'https://cdn.jsdelivr.net/gh/jeromeetienne/threex.planets@master/images';
 
 export const PLANET_VISUALS: Record<string, PlanetVisual> = {
   mercury: { color: '#8c8680', emissive: '#1a1816', atmosphere: '#b0aaa4', texture: `${TEX}/mercurymap.jpg` },
