@@ -1,21 +1,13 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router';
+import { RouterView } from 'vue-router';
+
+import AppNav from './components/AppNav.vue';
+import AppFooter from './components/AppFooter.vue';
 </script>
 
 <template>
   <div id="app-shell">
-    <nav class="nav" aria-label="Navegación principal">
-      <RouterLink to="/" class="nav-link">Hoy</RouterLink>
-      <RouterLink to="/cielo" class="nav-link">Cielo</RouterLink>
-      <RouterLink to="/eventos" class="nav-link">Eventos</RouterLink>
-      <RouterLink to="/planetas" class="nav-link">Planetas</RouterLink>
-      <RouterLink to="/aprende" class="nav-link">Aprende</RouterLink>
-      <RouterLink to="/favoritos" class="nav-link">Favoritos</RouterLink>
-      <RouterLink to="/iss" class="nav-link">ISS</RouterLink>
-      <RouterLink to="/constelaciones" class="nav-link">Guía</RouterLink>
-      <RouterLink to="/calculadora" class="nav-link">Calculadora</RouterLink>
-      <RouterLink to="/about" class="nav-link">About</RouterLink>
-    </nav>
+    <AppNav />
     <main class="main-content">
       <RouterView v-slot="{ Component }">
         <Transition name="page" mode="out-in">
@@ -23,12 +15,15 @@ import { RouterLink, RouterView } from 'vue-router';
         </Transition>
       </RouterView>
     </main>
+    <AppFooter />
   </div>
 </template>
 
 <style lang="scss">
 #app-shell {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background:
     linear-gradient(180deg, rgba(5, 10, 25, 0.35), rgba(5, 10, 25, 0.65)),
     url('https://backiee.com/static/wpdb/wallpapers/7680x4320/217772.jpg');
@@ -41,46 +36,9 @@ import { RouterLink, RouterView } from 'vue-router';
   -moz-osx-font-smoothing: grayscale;
 }
 
-.nav {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  justify-content: flex-start;
-  gap: 8px;
-  padding: 12px 16px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  background: rgba(8, 14, 32, 0.55);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-@media (min-width: 640px) {
-  .nav { justify-content: center; }
-}
-
-.nav-link {
-  color: rgba(245, 247, 255, 0.82);
-  text-decoration: none;
-  font-weight: 600;
-  padding: 10px 14px;
-  border-radius: 999px;
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-
-  &:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-  &.router-link-exact-active {
-    background: rgba(125, 211, 252, 0.18);
-    color: #7dd3fc;
-  }
-}
-
 .main-content {
-  padding: 20px 16px 40px;
+  flex: 1;
+  padding: 24px 16px 40px;
 }
 
 .page-enter-active,
@@ -95,8 +53,7 @@ import { RouterLink, RouterView } from 'vue-router';
 
 @media (prefers-reduced-motion: reduce) {
   .page-enter-active,
-  .page-leave-active,
-  .nav-link {
+  .page-leave-active {
     transition: none;
   }
 }

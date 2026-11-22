@@ -35,13 +35,32 @@ export function useLocation() {
     locationError.value = '';
   }
 
-  function requestGeolocation() {
+  async function requestGeolocation() {
     if (!navigator.geolocation) {
       locationError.value = 'La geolocalización no está disponible en este navegador.';
       return;
     }
+    if (!window.isSecureContext) {
+      locationError.value = 'La geolocalización requiere HTTPS o localhost. Ingresa tu ubicación manualmente.';
+      return;
+    }
+
     locating.value = true;
     locationError.value = '';
+
+    try {
+      if ('permissions' in navigator && navigator.permissions?.query) {
+        const status = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+        if (status.state === 'denied') {
+          locationError.value = 'El permiso de ubicación está bloqueado en el navegador. Habilítalo en la configuración del sitio.';
+          locating.value = false;
+          return;
+        }
+      }
+    } catch {
+      // permissions API not supported or failed; continue
+    }
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         saveLocation({
@@ -51,11 +70,20 @@ export function useLocation() {
         });
         locating.value = false;
       },
-      () => {
-        locationError.value = 'No se pudo obtener tu ubicación. Puedes ingresarla manualmente.';
+      (err) => {
+        const detail = err.message ? ` (${err.message})` : '';
+        if (err.code === err.PERMISSION_DENIED) {
+          locationError.value = `Permiso de ubicación denegado${detail}. Habilítalo en la configuración del sitio.`;
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          locationError.value = `Ubicación no disponible${detail}. Verifica los servicios de ubicación del sistema.`;
+        } else if (err.code === err.TIMEOUT) {
+          locationError.value = `Se agotó el tiempo para obtener la ubicación${detail}. Intenta de nuevo.`;
+        } else {
+          locationError.value = `No se pudo obtener tu ubicación${detail}.`;
+        }
         locating.value = false;
       },
-      { enableHighAccuracy: false, timeout: 8000 },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     );
   }
 
