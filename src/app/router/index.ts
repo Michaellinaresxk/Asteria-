@@ -26,6 +26,11 @@ const router = createRouter({
       component: () => import('@/features/planets/views/PlanetDetailView.vue'),
     },
     {
+      path: '/aprende',
+      name: 'learn',
+      component: () => import('@/features/learning/views/LearningHubView.vue'),
+    },
+    {
       path: '/calculadora',
       name: 'calculator',
       component: () => import('@/features/weight-calculator/views/HomeView.vue'),
