@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 
 import type { AstronomyEvent } from '@/shared/types/astronomy';
+import { useReminders } from '@/features/reminders/composables/useReminders';
 import { EVENT_TYPE_LABELS, getMonthDays } from '../utils/calendar';
 
 const now = new Date();
@@ -9,6 +10,7 @@ const currentYear = ref(now.getFullYear());
 const currentMonth = ref(now.getMonth());
 const selectedDate = ref(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
 const activeFilter = ref<AstronomyEvent['type'] | 'all'>('all');
+const { addReminder, hasReminder } = useReminders();
 
 const filters: Array<{ value: AstronomyEvent['type'] | 'all'; label: string }> = [
   { value: 'all', label: 'Todos' },
@@ -113,6 +115,14 @@ function formatSelected(date: Date) {
           <span class="event-type">{{ EVENT_TYPE_LABELS[event.type] }}</span>
           <h3>{{ event.title }}</h3>
           <p>{{ event.description }}</p>
+          <button
+            class="remind-btn"
+            type="button"
+            :disabled="hasReminder(event.id)"
+            @click="addReminder(event.id, event.title, event.date)"
+          >
+            {{ hasReminder(event.id) ? 'Recordatorio programado' : 'Recordarme' }}
+          </button>
         </article>
       </div>
       <p v-else class="empty">No hay eventos para este día con el filtro seleccionado.</p>
@@ -147,6 +157,8 @@ h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
 .event-type { display: inline-block; font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: rgba(125,211,252,0.15); color: #7dd3fc; margin-bottom: 4px; }
 .event-item h3 { margin: 0; font-size: 1rem; }
 .event-item p, .empty { margin: 4px 0 0; color: rgba(245,247,255,0.82); line-height: 1.5; }
+.remind-btn { margin-top: 10px; min-height: 40px; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.12); color: #7dd3fc; font-weight: 600; cursor: pointer; }
+.remind-btn:disabled { opacity: 0.55; cursor: default; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .hero, .card { animation: none; } }
 </style>
