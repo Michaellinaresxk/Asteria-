@@ -31,6 +31,16 @@ const router = createRouter({
       component: () => import('@/features/planets/views/PlanetDetailView.vue'),
     },
     {
+      path: '/planeta-vivo',
+      name: 'earth-events',
+      component: () => import('@/features/astronomy/views/EarthEventsView.vue'),
+    },
+    {
+      path: '/fotos',
+      name: 'photos',
+      component: () => import('@/features/astronomy/views/PhotoGalleryView.vue'),
+    },
+    {
       path: '/aprende',
       name: 'learn',
       component: () => import('@/features/learning/views/LearningHubView.vue'),
