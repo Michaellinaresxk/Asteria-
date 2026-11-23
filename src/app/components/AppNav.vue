@@ -16,6 +16,7 @@ const primaryLinks = [
 ];
 
 const moreLinks = [
+  { to: '/fotos', label: 'Fotos' },
   { to: '/constelaciones', label: 'Guía' },
   { to: '/aprende', label: 'Aprende' },
   { to: '/favoritos', label: 'Favoritos' },

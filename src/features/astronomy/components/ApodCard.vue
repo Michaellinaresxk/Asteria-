@@ -49,6 +49,7 @@ onMounted(async () => {
       <h3 class="apod-title">{{ apod.title }}</h3>
       <p class="apod-explanation">{{ apod.explanation }}</p>
       <p v-if="apod.copyright" class="apod-credit">© {{ apod.copyright }}</p>
+      <RouterLink class="gallery-link" to="/fotos">Ver más fotos →</RouterLink>
     </template>
   </article>
 </template>
@@ -108,11 +109,13 @@ h2 {
   font-size: 0.85rem;
 }
 
-.video-link {
+.video-link,
+.gallery-link {
   display: inline-block;
   margin-bottom: 12px;
   color: #7dd3fc;
 }
+.gallery-link { margin: 14px 0 0; min-height: 44px; line-height: 44px; font-weight: 600; }
 
 .loading-block {
   display: flex;
