@@ -10,6 +10,7 @@ export interface PlanetVisual {
 const TEX = 'https://cdn.jsdelivr.net/gh/jeromeetienne/threex.planets@master/images';
 
 export const PLANET_VISUALS: Record<string, PlanetVisual> = {
+  sun: { color: '#fbbf24', emissive: '#ff9d00', atmosphere: '#ffe8a3', texture: `${TEX}/sunmap.jpg` },
   mercury: { color: '#8c8680', emissive: '#1a1816', atmosphere: '#b0aaa4', texture: `${TEX}/mercurymap.jpg` },
   venus: { color: '#d4a657', emissive: '#3d2a10', atmosphere: '#f0c978', texture: `${TEX}/venusmap.jpg` },
   mars: { color: '#c1440e', emissive: '#2a0d00', atmosphere: '#ff7b54', texture: `${TEX}/marsmap1k.jpg` },
