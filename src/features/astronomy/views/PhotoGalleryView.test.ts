@@ -3,18 +3,22 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getApodArchive } from '@/shared/services/apodArchive';
 import { searchCommonsImages } from '@/shared/services/commonsImages';
 import { getEpicImages } from '@/shared/services/epic';
+import { getNasaVideoUrl, searchNasaVideos } from '@/shared/services/nasaVideos';
 
 import PhotoGalleryView from './PhotoGalleryView.vue';
 
 vi.mock('@/shared/services/apodArchive', () => ({ getApodArchive: vi.fn() }));
 vi.mock('@/shared/services/commonsImages', () => ({ searchCommonsImages: vi.fn() }));
 vi.mock('@/shared/services/epic', () => ({ getEpicImages: vi.fn() }));
+vi.mock('@/shared/services/nasaVideos', () => ({ searchNasaVideos: vi.fn(), getNasaVideoUrl: vi.fn() }));
 
 describe('PhotoGalleryView', () => {
   beforeEach(() => {
     vi.mocked(getApodArchive).mockReset();
     vi.mocked(searchCommonsImages).mockReset();
     vi.mocked(getEpicImages).mockReset();
+    vi.mocked(searchNasaVideos).mockReset();
+    vi.mocked(getNasaVideoUrl).mockReset();
   });
 
   it('renders APOD photos, opens the lightbox and switches to Commons', async () => {
@@ -73,5 +77,29 @@ describe('PhotoGalleryView', () => {
 
     expect(getEpicImages).toHaveBeenCalledTimes(1);
     expect(wrapper.text()).toContain('La Tierra · 2026-11-21');
+  });
+
+  it('opens a NASA video in the player', async () => {
+    vi.mocked(searchNasaVideos).mockResolvedValue([{
+      id: 'VID-1',
+      title: 'Vídeo de prueba',
+      description: 'Animación del sistema solar',
+      thumbUrl: 'https://example.com/video-thumb.jpg',
+    }]);
+    vi.mocked(getNasaVideoUrl).mockResolvedValue('https://example.com/video.mp4');
+
+    const wrapper = mount(PhotoGalleryView);
+    await flushPromises();
+
+    const videosTab = wrapper.findAll('.tab').find((tab) => tab.text().includes('Videos'));
+    await videosTab!.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Vídeo de prueba');
+    await wrapper.find('.photo-button').trigger('click');
+    await flushPromises();
+
+    expect(getNasaVideoUrl).toHaveBeenCalledWith('VID-1');
+    expect(wrapper.find('video').attributes('src')).toBe('https://example.com/video.mp4');
   });
 });
