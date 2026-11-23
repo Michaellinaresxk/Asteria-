@@ -5,6 +5,7 @@ import ImageLightbox from '@/shared/components/ImageLightbox.vue';
 import SkeletonLoader from '@/shared/components/SkeletonLoader.vue';
 import { getApodArchive } from '@/shared/services/apodArchive';
 import { searchCommonsImages } from '@/shared/services/commonsImages';
+import { getEpicImages } from '@/shared/services/epic';
 import { addDays, toIsoDate } from '@/shared/utils/dates';
 
 interface GalleryItem {
@@ -16,10 +17,11 @@ interface GalleryItem {
   credit: string;
 }
 
-type Source = 'apod' | 'commons';
+type Source = 'apod' | 'epic' | 'commons';
 
 const sources: Array<{ value: Source; label: string }> = [
   { value: 'apod', label: 'NASA · APOD' },
+  { value: 'epic', label: 'Tierra · EPIC' },
   { value: 'commons', label: 'Wikimedia Commons' },
 ];
 
@@ -35,12 +37,16 @@ const topics = [
 const source = ref<Source>('apod');
 const activeTopic = ref(topics[0]!.query);
 const apodItems = ref<GalleryItem[]>([]);
+const epicItems = ref<GalleryItem[]>([]);
 const commonsItems = ref<GalleryItem[]>([]);
 const loading = ref(false);
 const error = ref('');
 const lightbox = ref<GalleryItem | null>(null);
 
-const items = computed(() => (source.value === 'apod' ? apodItems.value : commonsItems.value));
+const items = computed(() => {
+  if (source.value === 'epic') return epicItems.value;
+  return source.value === 'apod' ? apodItems.value : commonsItems.value;
+});
 
 async function load(): Promise<void> {
   loading.value = true;
@@ -57,6 +63,16 @@ async function load(): Promise<void> {
         full: entry.hdurl ?? entry.url,
         caption: entry.explanation,
         credit: entry.copyright ? `© ${entry.copyright}` : 'NASA APOD',
+      }));
+    } else if (source.value === 'epic') {
+      const images = await getEpicImages(8);
+      epicItems.value = images.map((image) => ({
+        id: image.id,
+        title: `La Tierra · ${image.date.slice(0, 10)}`,
+        thumb: image.imageUrl,
+        full: image.imageUrl,
+        caption: `${image.caption} Centro: ${image.lat.toFixed(1)}°, ${image.lon.toFixed(1)}°`,
+        credit: 'NASA · EPIC / DSCOVR',
       }));
     } else {
       const images = await searchCommonsImages(activeTopic.value);

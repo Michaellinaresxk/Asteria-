@@ -2,16 +2,19 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getApodArchive } from '@/shared/services/apodArchive';
 import { searchCommonsImages } from '@/shared/services/commonsImages';
+import { getEpicImages } from '@/shared/services/epic';
 
 import PhotoGalleryView from './PhotoGalleryView.vue';
 
 vi.mock('@/shared/services/apodArchive', () => ({ getApodArchive: vi.fn() }));
 vi.mock('@/shared/services/commonsImages', () => ({ searchCommonsImages: vi.fn() }));
+vi.mock('@/shared/services/epic', () => ({ getEpicImages: vi.fn() }));
 
 describe('PhotoGalleryView', () => {
   beforeEach(() => {
     vi.mocked(getApodArchive).mockReset();
     vi.mocked(searchCommonsImages).mockReset();
+    vi.mocked(getEpicImages).mockReset();
   });
 
   it('renders APOD photos, opens the lightbox and switches to Commons', async () => {
@@ -49,5 +52,26 @@ describe('PhotoGalleryView', () => {
 
     expect(wrapper.text()).toContain('Galaxia de prueba');
     expect(searchCommonsImages).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows Earth images from EPIC', async () => {
+    vi.mocked(getEpicImages).mockResolvedValue([{
+      id: 'epic-1',
+      date: '2026-11-21 00:41:06',
+      imageUrl: 'https://example.com/earth.png',
+      caption: 'Vista de la Tierra',
+      lat: -16.7,
+      lon: 156.9,
+    }]);
+
+    const wrapper = mount(PhotoGalleryView);
+    await flushPromises();
+
+    const epicTab = wrapper.findAll('.tab').find((tab) => tab.text().includes('EPIC'));
+    await epicTab!.trigger('click');
+    await flushPromises();
+
+    expect(getEpicImages).toHaveBeenCalledTimes(1);
+    expect(wrapper.text()).toContain('La Tierra · 2026-11-21');
   });
 });
