@@ -3,9 +3,11 @@ import { computed, onMounted, ref } from 'vue';
 
 import ImageLightbox from '@/shared/components/ImageLightbox.vue';
 import SkeletonLoader from '@/shared/components/SkeletonLoader.vue';
+import VideoModal from '@/shared/components/VideoModal.vue';
 import { getApodArchive } from '@/shared/services/apodArchive';
 import { searchCommonsImages } from '@/shared/services/commonsImages';
 import { getEpicImages } from '@/shared/services/epic';
+import { getNasaVideoUrl, searchNasaVideos } from '@/shared/services/nasaVideos';
 import { addDays, toIsoDate } from '@/shared/utils/dates';
 
 interface GalleryItem {
@@ -15,14 +17,23 @@ interface GalleryItem {
   full: string;
   caption: string;
   credit: string;
+  videoId?: string;
 }
 
-type Source = 'apod' | 'epic' | 'commons';
+type Source = 'apod' | 'epic' | 'commons' | 'videos';
 
 const sources: Array<{ value: Source; label: string }> = [
   { value: 'apod', label: 'NASA · APOD' },
   { value: 'epic', label: 'Tierra · EPIC' },
+  { value: 'videos', label: 'Videos NASA' },
   { value: 'commons', label: 'Wikimedia Commons' },
+];
+
+const videoTopics = [
+  { label: 'Planetas', query: 'planet NASA animation' },
+  { label: 'Lanzamientos', query: 'rocket launch NASA' },
+  { label: 'Espacio profundo', query: 'deep space NASA visualization' },
+  { label: 'La Tierra', query: 'Earth from space NASA' },
 ];
 
 const topics = [
@@ -36,15 +47,22 @@ const topics = [
 
 const source = ref<Source>('apod');
 const activeTopic = ref(topics[0]!.query);
+const activeVideoTopic = ref(videoTopics[0]!.query);
 const apodItems = ref<GalleryItem[]>([]);
 const epicItems = ref<GalleryItem[]>([]);
 const commonsItems = ref<GalleryItem[]>([]);
+const videoItems = ref<GalleryItem[]>([]);
 const loading = ref(false);
 const error = ref('');
 const lightbox = ref<GalleryItem | null>(null);
+const videoItem = ref<GalleryItem | null>(null);
+const videoSrc = ref('');
+const videoLoading = ref(false);
+const videoError = ref('');
 
 const items = computed(() => {
   if (source.value === 'epic') return epicItems.value;
+  if (source.value === 'videos') return videoItems.value;
   return source.value === 'apod' ? apodItems.value : commonsItems.value;
 });
 
@@ -73,6 +91,17 @@ async function load(): Promise<void> {
         full: image.imageUrl,
         caption: `${image.caption} Centro: ${image.lat.toFixed(1)}°, ${image.lon.toFixed(1)}°`,
         credit: 'NASA · EPIC / DSCOVR',
+      }));
+    } else if (source.value === 'videos') {
+      const videos = await searchNasaVideos(activeVideoTopic.value);
+      videoItems.value = videos.map((video) => ({
+        id: video.id,
+        title: video.title,
+        thumb: video.thumbUrl,
+        full: '',
+        caption: video.description || 'Animación y vídeo de la NASA',
+        credit: 'NASA Image and Video Library',
+        videoId: video.id,
       }));
     } else {
       const images = await searchCommonsImages(activeTopic.value);
@@ -105,14 +134,51 @@ function setTopic(query: string): void {
   activeTopic.value = query;
   if (source.value === 'commons') load();
 }
+
+function setVideoTopic(query: string): void {
+  if (activeVideoTopic.value === query) return;
+  activeVideoTopic.value = query;
+  if (source.value === 'videos') load();
+}
+
+function openItem(item: GalleryItem): void {
+  if (item.videoId) {
+    void openVideo(item);
+    return;
+  }
+  lightbox.value = item;
+}
+
+async function openVideo(item: GalleryItem): Promise<void> {
+  videoItem.value = item;
+  videoSrc.value = '';
+  videoError.value = '';
+  videoLoading.value = true;
+
+  try {
+    const src = await getNasaVideoUrl(item.videoId!);
+    if (src) videoSrc.value = src;
+    else videoError.value = 'No se encontró un archivo de vídeo reproducible.';
+  } catch {
+    videoError.value = 'No se pudo cargar el vídeo. Inténtalo de nuevo.';
+  } finally {
+    videoLoading.value = false;
+  }
+}
+
+function closeVideo(): void {
+  videoItem.value = null;
+  videoSrc.value = '';
+  videoError.value = '';
+}
 </script>
 
 <template>
   <div class="gallery-view">
     <header class="hero">
       <p class="eyebrow">Galería</p>
-      <h1>Fotos del universo</h1>
-      <p class="subtitle">Imágenes reales de la NASA y de Wikimedia Commons. Toca una foto para ampliarla.</p>
+      <h1>Fotos y vídeos del universo</h1>
+      <p class="subtitle">Imágenes reales de la NASA y de Wikimedia Commons, además de animaciones y vídeos. Toca para explorar.</p>
     </header>
 
     <div class="tabs" role="tablist" aria-label="Fuente de las fotos">
@@ -143,7 +209,20 @@ function setTopic(query: string): void {
       </button>
     </div>
 
-    <p v-if="loading" class="status" role="status">Cargando fotografías…</p>
+    <div v-if="source === 'videos'" class="topics" aria-label="Temas de vídeo">
+      <button
+        v-for="topic in videoTopics"
+        :key="topic.query"
+        class="topic-chip"
+        :class="{ active: activeVideoTopic === topic.query }"
+        type="button"
+        @click="setVideoTopic(topic.query)"
+      >
+        {{ topic.label }}
+      </button>
+    </div>
+
+    <p v-if="loading" class="status" role="status">Cargando contenido…</p>
 
     <div v-if="loading" class="photo-grid" aria-hidden="true">
       <SkeletonLoader v-for="n in 6" :key="n" height="260px" radius="16px" />
@@ -156,8 +235,14 @@ function setTopic(query: string): void {
 
     <div v-else-if="items.length" class="photo-grid">
       <article v-for="item in items" :key="item.id" class="photo-card">
-        <button class="photo-button" type="button" :aria-label="`Ampliar ${item.title}`" @click="lightbox = item">
+        <button
+          class="photo-button"
+          type="button"
+          :aria-label="item.videoId ? `Reproducir ${item.title}` : `Ampliar ${item.title}`"
+          @click="openItem(item)"
+        >
           <img :src="item.thumb" :alt="item.title" loading="lazy">
+          <span v-if="item.videoId" class="play-badge" aria-hidden="true">▶</span>
         </button>
         <div class="photo-info">
           <h2>{{ item.title }}</h2>
@@ -170,13 +255,22 @@ function setTopic(query: string): void {
       </article>
     </div>
 
-    <p v-else class="message">No se encontraron fotografías para esta selección.</p>
+    <p v-else class="message">No se encontraron imágenes o vídeos para esta selección.</p>
 
     <ImageLightbox
       v-if="lightbox"
       :src="lightbox.full"
       :alt="lightbox.title"
       @close="lightbox = null"
+    />
+
+    <VideoModal
+      v-if="videoItem"
+      :title="videoItem.title"
+      :src="videoSrc"
+      :loading="videoLoading"
+      :error="videoError"
+      @close="closeVideo"
     />
   </div>
 </template>
@@ -194,7 +288,8 @@ h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
 
 .photo-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
 .photo-card { background: rgba(10,18,40,0.72); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; overflow: hidden; backdrop-filter: blur(10px); animation: fade-up 0.4s ease both; }
-.photo-button { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.photo-button { display: block; position: relative; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.play-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 52px; height: 52px; display: grid; place-items: center; border-radius: 50%; background: rgba(2, 6, 23, 0.65); border: 1px solid rgba(255,255,255,0.35); color: #fff; font-size: 1.1rem; padding-left: 3px; }
 .photo-button img { display: block; width: 100%; height: 220px; object-fit: cover; }
 .photo-info { padding: 14px; }
 .photo-info h2 { margin: 0 0 6px; font-size: 1rem; }
