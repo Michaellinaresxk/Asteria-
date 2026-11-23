@@ -1,18 +1,25 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 
+import { getWeekWindow, toIsoDate } from '@/shared/utils/dates';
+import { useNearEarthObjects } from '../composables/useNearEarthObjects';
 import { getEventsForDate } from '../data/dailyEvents';
+import { EVENT_TYPE_LABELS } from '../utils/calendar';
 
-const events = computed(() => getEventsForDate(new Date(), 14));
+const { events: neoEvents, loadRange } = useNearEarthObjects();
+const week = getWeekWindow(new Date());
 
-const typeLabel: Record<string, string> = {
-  'meteor-shower': 'Meteoros',
-  eclipse: 'Eclipse',
-  conjunction: 'Conjunción',
-  planet: 'Planeta',
-  moon: 'Luna',
-  season: 'Estación',
-};
+onMounted(() => loadRange(week.start, week.end));
+
+const events = computed(() => {
+  const today = toIsoDate(new Date());
+  const end = toIsoDate(week.end);
+  const nearbyNeos = neoEvents.value
+    .filter((event) => event.fullDate && event.fullDate >= today && event.fullDate <= end)
+    .slice(0, 5);
+
+  return [...getEventsForDate(new Date(), 14), ...nearbyNeos].slice(0, 8);
+});
 </script>
 
 <template>
@@ -25,7 +32,7 @@ const typeLabel: Record<string, string> = {
         <div class="event-date">{{ event.date }}</div>
         <div>
           <div class="event-meta">
-            <span class="event-type">{{ typeLabel[event.type] ?? event.type }}</span>
+            <span class="event-type">{{ EVENT_TYPE_LABELS[event.type] ?? event.type }}</span>
           </div>
           <h3>{{ event.title }}</h3>
           <p>{{ event.description }}</p>
@@ -33,6 +40,7 @@ const typeLabel: Record<string, string> = {
       </li>
     </ul>
     <p v-else class="status">No hay eventos destacados en los próximos días.</p>
+    <p class="data-source">Asteroides cercanos: NASA NeoWs</p>
   </article>
 </template>
 
@@ -94,6 +102,7 @@ h2 { margin: 6px 0 16px; font-size: clamp(1.3rem, 4vw, 1.8rem); }
 h3 { margin: 0; font-size: 1rem; }
 p { margin: 4px 0 0; color: rgba(245, 247, 255, 0.82); line-height: 1.5; font-size: 0.92rem; }
 .status { color: rgba(245, 247, 255, 0.72); }
+.data-source { margin-top: 14px; font-size: 0.72rem; color: rgba(245, 247, 255, 0.5); }
 
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(12px); }

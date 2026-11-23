@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import type { AstronomyEvent } from '@/shared/types/astronomy';
+import { getWeekWindow, toIsoDate } from '@/shared/utils/dates';
 import { useReminders } from '@/features/reminders/composables/useReminders';
+import { useNearEarthObjects } from '../composables/useNearEarthObjects';
 import { EVENT_TYPE_LABELS, getMonthDays } from '../utils/calendar';
 
 const now = new Date();
@@ -11,6 +13,7 @@ const currentMonth = ref(now.getMonth());
 const selectedDate = ref(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
 const activeFilter = ref<AstronomyEvent['type'] | 'all'>('all');
 const { addReminder, hasReminder } = useReminders();
+const { events: neoEvents, loading: neoLoading, error: neoError, loadRange } = useNearEarthObjects();
 
 const filters: Array<{ value: AstronomyEvent['type'] | 'all'; label: string }> = [
   { value: 'all', label: 'Todos' },
@@ -21,13 +24,22 @@ const monthLabel = computed(() =>
   new Date(currentYear.value, currentMonth.value, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
 );
 
-const days = computed(() => getMonthDays(currentYear.value, currentMonth.value));
+function loadNearEarthObjects(date: Date = selectedDate.value) {
+  const week = getWeekWindow(date);
+  loadRange(week.start, week.end);
+}
+
+watch(selectedDate, (date) => loadNearEarthObjects(date), { immediate: true });
 
 const filteredDays = computed(() =>
-  days.value.map((day) => ({
-    ...day,
-    events: activeFilter.value === 'all' ? day.events : day.events.filter((e) => e.type === activeFilter.value),
-  })),
+  getMonthDays(currentYear.value, currentMonth.value).map((day) => {
+    const iso = toIsoDate(day.date);
+    const events = [...day.events, ...neoEvents.value.filter((event) => event.fullDate === iso)];
+    return {
+      ...day,
+      events: activeFilter.value === 'all' ? events : events.filter((e) => e.type === activeFilter.value),
+    };
+  }),
 );
 
 const selectedDayEvents = computed(() => {
@@ -61,8 +73,14 @@ function formatSelected(date: Date) {
     <header class="hero">
       <p class="eyebrow">Calendario</p>
       <h1>Eventos astronómicos</h1>
-      <p class="subtitle">Explora eventos por mes y filtra por tipo.</p>
+      <p class="subtitle">Explora eventos por mes, filtra por tipo y consulta los asteroides cercanos (NASA NeoWs).</p>
     </header>
+
+    <p v-if="neoLoading" class="data-status" role="status">Consultando asteroides cercanos a la NASA…</p>
+    <div v-else-if="neoError" class="data-status data-status-error" role="alert">
+      <span>{{ neoError }}</span>
+      <button type="button" @click="loadNearEarthObjects()">Reintentar</button>
+    </div>
 
     <div class="filters" role="tablist" aria-label="Filtro de eventos">
       <button
@@ -115,6 +133,13 @@ function formatSelected(date: Date) {
           <span class="event-type">{{ EVENT_TYPE_LABELS[event.type] }}</span>
           <h3>{{ event.title }}</h3>
           <p>{{ event.description }}</p>
+          <a
+            v-if="event.detailUrl"
+            class="detail-link"
+            :href="event.detailUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >Ver datos en JPL ↗</a>
           <button
             class="remind-btn"
             type="button"
@@ -136,6 +161,9 @@ function formatSelected(date: Date) {
 .eyebrow { margin: 0; color: #7dd3fc; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; }
 h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
 .subtitle { margin: 0; color: rgba(245,247,255,0.78); }
+.data-status { margin: 0 0 12px; font-size: 0.85rem; color: #7dd3fc; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.data-status-error { color: #fca5a5; }
+.data-status button { min-height: 32px; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(252,165,165,0.4); background: rgba(252,165,165,0.1); color: inherit; cursor: pointer; }
 .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px; -webkit-overflow-scrolling: touch; }
 .filter-chip { flex: 0 0 auto; min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); color: #fff; font-weight: 600; }
 .filter-chip.active { background: rgba(125,211,252,0.18); color: #7dd3fc; border-color: rgba(125,211,252,0.35); }
@@ -157,6 +185,7 @@ h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
 .event-type { display: inline-block; font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: rgba(125,211,252,0.15); color: #7dd3fc; margin-bottom: 4px; }
 .event-item h3 { margin: 0; font-size: 1rem; }
 .event-item p, .empty { margin: 4px 0 0; color: rgba(245,247,255,0.82); line-height: 1.5; }
+.detail-link { display: inline-block; margin-top: 8px; min-height: 32px; color: #7dd3fc; font-size: 0.85rem; }
 .remind-btn { margin-top: 10px; min-height: 40px; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.12); color: #7dd3fc; font-weight: 600; cursor: pointer; }
 .remind-btn:disabled { opacity: 0.55; cursor: default; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }

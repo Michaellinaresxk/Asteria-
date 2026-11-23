@@ -9,6 +9,7 @@ export const EVENT_TYPE_LABELS: Record<AstronomyEvent['type'], string> = {
   planet: 'Planeta',
   moon: 'Luna',
   season: 'Estación',
+  asteroid: 'Asteroides',
 };
 
 export interface CalendarDay {

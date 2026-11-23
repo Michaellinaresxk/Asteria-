@@ -12,9 +12,11 @@ export interface ApodResponse {
 export interface AstronomyEvent {
   id: string;
   date: string; // MM-DD
+  fullDate?: string; // YYYY-MM-DD, present for year-specific events from APIs
   title: string;
   description: string;
-  type: 'meteor-shower' | 'eclipse' | 'conjunction' | 'planet' | 'moon' | 'season';
+  type: 'meteor-shower' | 'eclipse' | 'conjunction' | 'planet' | 'moon' | 'season' | 'asteroid';
+  detailUrl?: string;
 }
 
 export interface MoonPhaseInfo {
