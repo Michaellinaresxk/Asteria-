@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getNearEarthObjects, normalizeFeed, type NeoFeedResponse } from './neoWs';
+import { getNearEarthObject, getNearEarthObjects, normalizeFeed, type NeoFeedResponse } from './neoWs';
 
 vi.mock('axios', () => ({ default: { get: vi.fn() } }));
 
@@ -48,6 +48,35 @@ describe('neoWs service', () => {
     vi.mocked(axios.get).mockRejectedValue({ response: { status: 429 } });
     await expect(getNearEarthObjects(new Date(2026, 10, 1), new Date(2026, 10, 2)))
       .rejects.toThrow('LÍMITE_NEGOWS');
+  });
+
+  it('fetches and normalizes detailed orbital data', async () => {
+    vi.mocked(axios.get).mockResolvedValue({
+      data: {
+        name: '(2014 WZ365)',
+        nasa_jpl_url: 'https://example.com/jpl',
+        absolute_magnitude_h: 26,
+        is_potentially_hazardous_asteroid: false,
+        orbital_data: {
+          perihelion_distance: '0.85',
+          aphelion_distance: '1.2',
+          eccentricity: '0.17',
+          inclination: '3.4',
+          orbital_period: '365.2',
+        },
+      },
+    } as never);
+
+    const detail = await getNearEarthObject('3699892');
+
+    expect(detail).toMatchObject({
+      id: '3699892',
+      name: '2014 WZ365',
+      perihelionAu: 0.85,
+      aphelionAu: 1.2,
+      orbitalPeriodDays: 365.2,
+    });
+    expect(vi.mocked(axios.get).mock.calls[0]?.[0]).toContain('/neo/3699892');
   });
 
   it('propagates network errors', async () => {

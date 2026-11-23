@@ -25,6 +25,49 @@ export interface NeoFeedResponse {
   near_earth_objects: Record<string, RawNeo[]>;
 }
 
+interface RawNeoDetail {
+  name: string;
+  nasa_jpl_url: string;
+  absolute_magnitude_h: number;
+  is_potentially_hazardous_asteroid: boolean;
+  orbital_data?: {
+    perihelion_distance?: string;
+    aphelion_distance?: string;
+    eccentricity?: string;
+    inclination?: string;
+    orbital_period?: string;
+  };
+}
+
+export interface NearEarthObjectDetail {
+  id: string;
+  name: string;
+  jplUrl: string;
+  absoluteMagnitude: number;
+  hazardous: boolean;
+  perihelionAu: number;
+  aphelionAu: number;
+  eccentricity: number;
+  inclinationDeg: number;
+  orbitalPeriodDays: number;
+}
+
+export function normalizeNeoDetail(id: string, data: RawNeoDetail): NearEarthObjectDetail {
+  const orbit = data.orbital_data ?? {};
+  return {
+    id,
+    name: data.name.replace(/^\(([^)]*)\)?\s*/, '$1'),
+    jplUrl: data.nasa_jpl_url,
+    absoluteMagnitude: toNumber(data.absolute_magnitude_h),
+    hazardous: Boolean(data.is_potentially_hazardous_asteroid),
+    perihelionAu: toNumber(orbit.perihelion_distance),
+    aphelionAu: toNumber(orbit.aphelion_distance),
+    eccentricity: toNumber(orbit.eccentricity),
+    inclinationDeg: toNumber(orbit.inclination),
+    orbitalPeriodDays: toNumber(orbit.orbital_period),
+  };
+}
+
 function toNumber(value: string | number | undefined): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -81,4 +124,14 @@ export async function getNearEarthObjects(start: Date, end: Date): Promise<NearE
   return results
     .flat()
     .sort((a, b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name));
+}
+
+/** Detailed orbital data for a single near-Earth object. */
+export async function getNearEarthObject(id: string): Promise<NearEarthObjectDetail> {
+  const { data } = await axios.get<RawNeoDetail>(`https://api.nasa.gov/neo/rest/v1/neo/${encodeURIComponent(id)}`, {
+    params: { api_key: NASA_API_KEY },
+    timeout: 10000,
+  });
+
+  return normalizeNeoDetail(id, data);
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 
+import { getNearEarthObject, type NearEarthObjectDetail } from '@/shared/services/neoWs';
 import type { AstronomyEvent } from '@/shared/types/astronomy';
 import { getWeekWindow, toIsoDate } from '@/shared/utils/dates';
 import { useReminders } from '@/features/reminders/composables/useReminders';
@@ -14,6 +15,11 @@ const selectedDate = ref(new Date(now.getFullYear(), now.getMonth(), now.getDate
 const activeFilter = ref<AstronomyEvent['type'] | 'all'>('all');
 const { addReminder, hasReminder } = useReminders();
 const { events: neoEvents, loading: neoLoading, error: neoError, loadRange } = useNearEarthObjects();
+
+const orbitEventId = ref('');
+const orbitDetail = ref<NearEarthObjectDetail | null>(null);
+const orbitLoading = ref(false);
+const orbitError = ref('');
 
 const filters: Array<{ value: AstronomyEvent['type'] | 'all'; label: string }> = [
   { value: 'all', label: 'Todos' },
@@ -29,7 +35,38 @@ function loadNearEarthObjects(date: Date = selectedDate.value) {
   loadRange(week.start, week.end);
 }
 
-watch(selectedDate, (date) => loadNearEarthObjects(date), { immediate: true });
+watch(selectedDate, (date) => {
+  closeOrbit();
+  loadNearEarthObjects(date);
+}, { immediate: true });
+
+async function showOrbit(event: AstronomyEvent): Promise<void> {
+  const match = event.id.match(/^neo-(.+)-\d{4}-\d{2}-\d{2}$/);
+  if (!match) return;
+  if (orbitEventId.value === event.id && orbitDetail.value) {
+    closeOrbit();
+    return;
+  }
+
+  orbitEventId.value = event.id;
+  orbitDetail.value = null;
+  orbitError.value = '';
+  orbitLoading.value = true;
+
+  try {
+    orbitDetail.value = await getNearEarthObject(match[1]!);
+  } catch {
+    orbitError.value = 'No se pudieron cargar los datos orbitales.';
+  } finally {
+    orbitLoading.value = false;
+  }
+}
+
+function closeOrbit(): void {
+  orbitEventId.value = '';
+  orbitDetail.value = null;
+  orbitError.value = '';
+}
 
 const filteredDays = computed(() =>
   getMonthDays(currentYear.value, currentMonth.value).map((day) => {
@@ -133,6 +170,23 @@ function formatSelected(date: Date) {
           <span class="event-type">{{ EVENT_TYPE_LABELS[event.type] }}</span>
           <h3>{{ event.title }}</h3>
           <p>{{ event.description }}</p>
+
+          <button v-if="event.type === 'asteroid'" class="orbit-btn" type="button" @click="showOrbit(event)">
+            {{ orbitEventId === event.id && orbitDetail ? 'Ocultar órbita' : 'Ver órbita' }}
+          </button>
+          <div v-if="orbitEventId === event.id" class="orbit-panel">
+            <p v-if="orbitLoading" class="orbit-status" role="status">Cargando datos orbitales…</p>
+            <p v-else-if="orbitError" class="orbit-status orbit-error" role="alert">{{ orbitError }}</p>
+            <dl v-else-if="orbitDetail" class="orbit-grid">
+              <div><dt>Perihelio</dt><dd>{{ orbitDetail.perihelionAu.toFixed(2) }} UA</dd></div>
+              <div><dt>Afelio</dt><dd>{{ orbitDetail.aphelionAu.toFixed(2) }} UA</dd></div>
+              <div><dt>Excentricidad</dt><dd>{{ orbitDetail.eccentricity.toFixed(3) }}</dd></div>
+              <div><dt>Inclinación</dt><dd>{{ orbitDetail.inclinationDeg.toFixed(1) }}°</dd></div>
+              <div><dt>Periodo orbital</dt><dd>{{ Math.round(orbitDetail.orbitalPeriodDays) }} días</dd></div>
+            </dl>
+            <button v-if="orbitDetail || orbitError" class="orbit-close" type="button" @click="closeOrbit">Cerrar datos</button>
+          </div>
+
           <a
             v-if="event.detailUrl"
             class="detail-link"
@@ -186,6 +240,14 @@ h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
 .event-item h3 { margin: 0; font-size: 1rem; }
 .event-item p, .empty { margin: 4px 0 0; color: rgba(245,247,255,0.82); line-height: 1.5; }
 .detail-link { display: inline-block; margin-top: 8px; min-height: 32px; color: #7dd3fc; font-size: 0.85rem; }
+.orbit-btn { margin-top: 8px; min-height: 40px; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(251,191,36,0.3); background: rgba(251,191,36,0.1); color: #fbbf24; font-weight: 600; cursor: pointer; }
+.orbit-panel { margin-top: 10px; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+.orbit-status { margin: 0; font-size: 0.85rem; color: rgba(245,247,255,0.8); }
+.orbit-error { color: #fca5a5; }
+.orbit-grid { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px 12px; }
+.orbit-grid dt { font-size: 0.72rem; color: rgba(245,247,255,0.6); }
+.orbit-grid dd { margin: 2px 0 0; font-weight: 700; }
+.orbit-close { margin-top: 10px; min-height: 36px; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; }
 .remind-btn { margin-top: 10px; min-height: 40px; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(125,211,252,0.3); background: rgba(125,211,252,0.12); color: #7dd3fc; font-weight: 600; cursor: pointer; }
 .remind-btn:disabled { opacity: 0.55; cursor: default; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
