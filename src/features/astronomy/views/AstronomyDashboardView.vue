@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue';
+
 import ApodCard from '../components/ApodCard.vue';
 import DailyEventsCard from '../components/DailyEventsCard.vue';
 import EarthTodayCard from '../components/EarthTodayCard.vue';
@@ -8,6 +10,9 @@ import ShareCard from '../components/ShareCard.vue';
 import SpaceWeatherCard from '../components/SpaceWeatherCard.vue';
 import SunTimesCard from '../components/SunTimesCard.vue';
 import { useLocation } from '../composables/useLocation';
+
+// TresJS is heavy: load the 3D hero only when the dashboard is shown.
+const SpaceJourneyHero = defineAsyncComponent(() => import('../components/SpaceJourneyHero.vue'));
 
 const { location, locating, locationError, saveLocation, requestGeolocation } = useLocation();
 
@@ -21,9 +26,11 @@ const today = new Date().toLocaleDateString('es-ES', {
 
 <template>
   <div class="dashboard">
+    <SpaceJourneyHero />
+
     <header class="dashboard-hero">
-      <p class="eyebrow">Astronomía</p>
-      <h1>Hoy en el cielo</h1>
+      <p class="eyebrow">Panel de hoy</p>
+      <h2>Hoy en el cielo</h2>
       <p class="date">{{ today }}</p>
     </header>
 
@@ -54,8 +61,11 @@ const today = new Date().toLocaleDateString('es-ES', {
 }
 
 .dashboard-hero {
+  position: relative;
+  z-index: 2;
   color: #f5f7ff;
   margin-bottom: 24px;
+  padding-top: 16px;
   animation: fade-up 0.4s ease both;
 }
 
@@ -67,9 +77,9 @@ const today = new Date().toLocaleDateString('es-ES', {
   text-transform: uppercase;
 }
 
-h1 {
+h2 {
   margin: 4px 0;
-  font-size: clamp(2rem, 8vw, 3.5rem);
+  font-size: clamp(1.8rem, 6vw, 2.6rem);
   line-height: 1.1;
 }
 
@@ -80,6 +90,8 @@ h1 {
 }
 
 .dashboard-grid {
+  position: relative;
+  z-index: 2;
   display: grid;
   gap: 16px;
   grid-template-columns: 1fr;
