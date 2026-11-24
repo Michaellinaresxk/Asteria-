@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, onUnmounted } from 'vue';
 import { AdditiveBlending, BufferGeometry, DoubleSide, Object3D, Vector3 } from 'three';
-import { TresCanvas, useLoop } from '@tresjs/core';
+import { TresCanvas } from '@tresjs/core';
 import { OrbitControls, Stars } from '@tresjs/cientos';
-import type { Vec3 } from '@/shared/types/vector';
 
 import { getBodyColor, SOLAR_SYSTEM_BODIES, SUN_VISUAL } from '../data/solarSystem';
 import { useSolarSystemTextures } from '../composables/useSolarSystemTextures';
-import { getOrbitAngle, getOrbitPosition, getOrbitRingPoints, getChildPosition } from '../utils/orbits';
+import { getOrbitRingPoints } from '../utils/orbits';
+import OrbitalMotion from './OrbitalMotion.vue';
 
 const props = defineProps<{
   selectedId: string | null;
@@ -46,24 +46,6 @@ function bodyTexture(id: string) {
   return textures.value[id] ?? undefined;
 }
 
-const { onBeforeRender } = useLoop();
-onBeforeRender(({ elapsed, delta }) => {
-  const positions = new Map<string, Vec3>();
-
-  for (const item of SOLAR_SYSTEM_BODIES) {
-    const angle = getOrbitAngle(item.initialAngle, item.orbitSpeed, elapsed);
-    const localPosition = getOrbitPosition(item.orbitRadius, angle, item.inclination);
-    const parentPosition = item.parent ? positions.get(item.parent) : undefined;
-    const position = parentPosition ? getChildPosition(parentPosition, localPosition) : localPosition;
-    positions.set(item.id, position);
-
-    const mesh = meshes.get(item.id);
-    if (!mesh) continue;
-    mesh.position.set(...position);
-    mesh.rotation.y += delta * 0.35;
-  }
-});
-
 const selectedName = computed(() =>
   [...SOLAR_SYSTEM_BODIES, SUN_VISUAL].find((item) => item.id === props.selectedId)?.name ?? '');
 </script>
@@ -80,6 +62,7 @@ const selectedName = computed(() =>
         :max-polar-angle="MAX_POLAR_ANGLE"
       />
       <Stars :radius="90" :depth="45" :count="2000" :size="0.35" :factor="4" :fade="true" />
+      <OrbitalMotion :meshes="meshes" />
 
       <TresAmbientLight :intensity="0.35" />
       <TresPointLight :position="[0, 0, 0]" :intensity="14" :distance="60" :decay="2" color="#ffd9a0" />
