@@ -1,14 +1,18 @@
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue';
+
 import ApodCard from '../components/ApodCard.vue';
 import DailyEventsCard from '../components/DailyEventsCard.vue';
 import EarthTodayCard from '../components/EarthTodayCard.vue';
 import LocationCard from '../components/LocationCard.vue';
 import MoonPhaseCard from '../components/MoonPhaseCard.vue';
 import ShareCard from '../components/ShareCard.vue';
-import SpaceJourneyHero from '../components/SpaceJourneyHero.vue';
 import SpaceWeatherCard from '../components/SpaceWeatherCard.vue';
 import SunTimesCard from '../components/SunTimesCard.vue';
 import { useLocation } from '../composables/useLocation';
+
+// TresJS is heavy: load the 3D hero only when the dashboard is shown.
+const SpaceJourneyHero = defineAsyncComponent(() => import('../components/SpaceJourneyHero.vue'));
 
 const { location, locating, locationError, saveLocation, requestGeolocation } = useLocation();
 
