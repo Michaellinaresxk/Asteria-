@@ -258,7 +258,7 @@ function formatSelected(date: Date) {
 .calendar-view { max-width: 900px; margin: 0 auto; color: #f5f7ff; }
 .hero { margin-bottom: 20px; animation: fade-up 0.4s ease both; }
 .eyebrow { margin: 0; color: #7dd3fc; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; }
-h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
+h1 { margin: 4px 0; font-size: clamp(1.7rem, 7vw, 3rem); }
 .subtitle { margin: 0; color: rgba(245,247,255,0.78); }
 .data-status { margin: 0 0 12px; font-size: 0.85rem; color: #7dd3fc; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .data-status-error { color: #fca5a5; }

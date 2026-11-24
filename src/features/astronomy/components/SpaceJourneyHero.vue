@@ -42,8 +42,8 @@ const { pose, progress, activeStop, activeStopIndex, goToStop } = useSpaceJourne
 .journey-hero {
   position: relative;
   z-index: 1;
-  min-height: 100vh;
-  min-height: 100svh;
+  min-height: calc(100vh - 84px);
+  min-height: calc(100svh - 84px);
   display: flex;
   align-items: flex-end;
   padding: 0 0 clamp(40px, 8vh, 90px);
@@ -91,6 +91,12 @@ const { pose, progress, activeStop, activeStopIndex, goToStop } = useSpaceJourne
   align-items: center;
   gap: 18px;
   flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .journey-hero { padding-bottom: 56px; }
+  .journey-copy { min-height: 130px; }
+  .journey-actions { flex-direction: column; align-items: flex-start; gap: 14px; }
 }
 
 .journey-hint {
