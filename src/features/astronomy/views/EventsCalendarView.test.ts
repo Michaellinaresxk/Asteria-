@@ -37,7 +37,19 @@ describe('EventsCalendarView', () => {
     expect(text).toContain('Asteroides');
     expect(text).toContain('Ver datos en JPL');
 
-    expect(wrapper.findAll('.filter-chip').some((chip) => chip.text() === 'Asteroides')).toBe(true);
+    expect(wrapper.findAll('.filter-chip').some((chip) => chip.text().startsWith('Asteroides'))).toBe(true);
+  });
+
+  it('shows a populated monthly agenda and counts for every filter', async () => {
+    vi.mocked(getNearEarthObjects).mockResolvedValue([]);
+
+    const wrapper = mount(EventsCalendarView);
+    await flushPromises();
+
+    expect(wrapper.findAll('.month-event').length).toBeGreaterThan(0);
+    const chips = wrapper.findAll('.filter-chip');
+    expect(chips).toHaveLength(8);
+    chips.forEach((chip) => expect(chip.find('.filter-count').exists()).toBe(true));
   });
 
   it('loads and shows the orbital detail of an asteroid', async () => {

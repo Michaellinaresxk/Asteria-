@@ -6,7 +6,7 @@ import type { AstronomyEvent } from '@/shared/types/astronomy';
 import { getWeekWindow, toIsoDate } from '@/shared/utils/dates';
 import { useReminders } from '@/features/reminders/composables/useReminders';
 import { useNearEarthObjects } from '../composables/useNearEarthObjects';
-import { EVENT_TYPE_LABELS, getMonthDays } from '../utils/calendar';
+import { EVENT_TYPE_LABELS, getEventsForMonth, getMonthDays } from '../utils/calendar';
 
 const now = new Date();
 const currentYear = ref(now.getFullYear());
@@ -21,14 +21,29 @@ const orbitDetail = ref<NearEarthObjectDetail | null>(null);
 const orbitLoading = ref(false);
 const orbitError = ref('');
 
-const filters: Array<{ value: AstronomyEvent['type'] | 'all'; label: string }> = [
-  { value: 'all', label: 'Todos' },
-  ...Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => ({ value: value as AstronomyEvent['type'], label })),
+const filters: Array<{ value: AstronomyEvent['type'] | 'all'; label: string; count: number }> = [
+  { value: 'all', label: 'Todos', count: 0 },
+  ...Object.entries(EVENT_TYPE_LABELS).map(([value, label]) => ({ value: value as AstronomyEvent['type'], label, count: 0 })),
 ];
 
 const monthLabel = computed(() =>
   new Date(currentYear.value, currentMonth.value, 1).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
 );
+
+const monthEvents = computed(() => getEventsForMonth(currentYear.value, currentMonth.value));
+
+const filterCounts = computed(() => {
+  const counts: Record<string, number> = { all: monthEvents.value.length };
+  monthEvents.value.forEach((event) => {
+    counts[event.type] = (counts[event.type] ?? 0) + 1;
+  });
+  counts.asteroid = neoEvents.value.filter((event) => {
+    const date = new Date(`${event.fullDate}T12:00:00`);
+    return date.getFullYear() === currentYear.value && date.getMonth() === currentMonth.value;
+  }).length;
+  counts.all += counts.asteroid;
+  return counts;
+});
 
 function loadNearEarthObjects(date: Date = selectedDate.value) {
   const week = getWeekWindow(date);
@@ -86,18 +101,28 @@ const selectedDayEvents = computed(() => {
 
 const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
-function prevMonth() {
-  if (currentMonth.value === 0) { currentMonth.value = 11; currentYear.value -= 1; }
-  else currentMonth.value -= 1;
+function goToMonth(delta: number): void {
+  const date = new Date(currentYear.value, currentMonth.value + delta, 1);
+  currentYear.value = date.getFullYear();
+  currentMonth.value = date.getMonth();
+
+  const today = new Date();
+  const selected = currentYear.value === today.getFullYear() && currentMonth.value === today.getMonth()
+    ? today
+    : new Date(currentYear.value, currentMonth.value, 1);
+  selectedDate.value = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
 }
 
-function nextMonth() {
-  if (currentMonth.value === 11) { currentMonth.value = 0; currentYear.value += 1; }
-  else currentMonth.value += 1;
-}
+function prevMonth() { goToMonth(-1); }
+function nextMonth() { goToMonth(1); }
 
 function selectDay(date: Date) {
   selectedDate.value = new Date(date);
+}
+
+function selectEvent(event: AstronomyEvent): void {
+  const date = event.fullDate ? new Date(`${event.fullDate}T12:00:00`) : new Date();
+  selectedDate.value = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 function formatSelected(date: Date) {
@@ -129,6 +154,7 @@ function formatSelected(date: Date) {
         @click="activeFilter = filter.value"
       >
         {{ filter.label }}
+        <span class="filter-count">{{ filterCounts[filter.value] ?? 0 }}</span>
       </button>
     </div>
 
@@ -160,6 +186,25 @@ function formatSelected(date: Date) {
           <span v-if="day.events.length" class="event-dot" />
         </button>
       </div>
+    </section>
+
+    <section class="card month-summary">
+      <p class="eyebrow">Agenda del mes</p>
+      <h2>{{ monthLabel }}</h2>
+      <div v-if="monthEvents.length" class="month-event-list">
+        <button
+          v-for="event in monthEvents"
+          :key="event.id"
+          type="button"
+          class="month-event"
+          @click="selectEvent(event)"
+        >
+          <span class="summary-date">{{ event.fullDate?.slice(8) }}</span>
+          <span class="summary-type">{{ EVENT_TYPE_LABELS[event.type] }}</span>
+          <strong>{{ event.title }}</strong>
+        </button>
+      </div>
+      <p v-else class="empty">No hay efemérides registradas para este mes.</p>
     </section>
 
     <section class="card detail-card">
@@ -219,8 +264,9 @@ h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
 .data-status-error { color: #fca5a5; }
 .data-status button { min-height: 32px; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(252,165,165,0.4); background: rgba(252,165,165,0.1); color: inherit; cursor: pointer; }
 .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px; -webkit-overflow-scrolling: touch; }
-.filter-chip { flex: 0 0 auto; min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); color: #fff; font-weight: 600; }
+.filter-chip { flex: 0 0 auto; min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.04); color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
 .filter-chip.active { background: rgba(125,211,252,0.18); color: #7dd3fc; border-color: rgba(125,211,252,0.35); }
+.filter-count { min-width: 22px; padding: 1px 6px; border-radius: 999px; background: rgba(255,255,255,0.1); font-size: 0.72rem; line-height: 1.5; }
 .card { background: rgba(10,18,40,0.72); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 20px; backdrop-filter: blur(10px); margin-bottom: 16px; animation: fade-up 0.5s ease both; }
 .month-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
 .month-label { margin: 0; font-size: 1.2rem; text-transform: capitalize; }
@@ -233,6 +279,13 @@ h1 { margin: 4px 0; font-size: clamp(2rem, 8vw, 3rem); }
 .day-cell.selected { background: rgba(125,211,252,0.18); border-color: rgba(125,211,252,0.45); }
 .day-number { font-size: 0.9rem; }
 .event-dot { width: 6px; height: 6px; border-radius: 50%; background: #fbbf24; }
+.month-summary { animation-delay: 0.08s; }
+.month-summary h2 { margin: 4px 0 14px; font-size: 1.2rem; text-transform: capitalize; }
+.month-event-list { display: grid; gap: 8px; max-height: 320px; overflow-y: auto; }
+.month-event { min-height: 44px; width: 100%; display: grid; grid-template-columns: 36px 100px 1fr; align-items: center; gap: 8px; text-align: left; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: #fff; cursor: pointer; }
+.month-event:hover { border-color: rgba(125,211,252,0.35); }
+.summary-date { font-size: 1.1rem; font-weight: 800; color: #7dd3fc; }
+.summary-type { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(245,247,255,0.6); }
 .detail-card .selected-date { margin: 4px 0 14px; font-size: 1.2rem; text-transform: capitalize; }
 .event-list { display: flex; flex-direction: column; gap: 12px; }
 .event-item { padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); }
